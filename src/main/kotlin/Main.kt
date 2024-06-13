@@ -1,24 +1,25 @@
 package bullscows
 
-class CowsBulls {
-    private var secretCode: MutableList<Int>
-    private var code: List<Int>
-    private var cows: Int
-    private var bulls: Int
+import kotlin.random.Random
 
-    init {
-        secretCode = mutableListOf(9,3,0,5)
-        code = listOf(9,3,0,5)
-        cows = 0
-        bulls = 4
-    }
+
+class CowsBulls {
+    private lateinit var secretCode: MutableList<String>
+    private lateinit var code: List<String>
+
+    private var cntSymbols = 0
+
+    private var cows: Int = 0
+    private var bulls: Int = 0
+
+    private val alphabet = "abcdefghijklmnopqrstuvwxyz"
 
     fun checkCode() {
         var i = 1
         while (true) {
             println("Turn ${i++}:")
-            code = readln().split("").subList(1, secretCode.size + 1).map { it.toInt() }
-            cows =0; bulls = 0
+            code = readln().split("").subList(1, secretCode.size + 1)
+            cows = 0; bulls = 0
             code.forEachIndexed { index, c ->
                 when (c) {
                     secretCode[index] -> bulls++
@@ -32,7 +33,6 @@ class CowsBulls {
             }
         }
     }
-
     private fun printResult() {
         println(
             "Grade: " + when {
@@ -43,28 +43,49 @@ class CowsBulls {
             }
         )
     }
-
+    private fun addSymbolToSecretCode(symbol: String) {
+        if (symbol !in secretCode) {
+            secretCode.add(symbol)
+        }
+    }
     fun generateSecretCode() {
         println("Please, enter the secret code's length:")
         val codeLength = readln().toInt()
-        if (codeLength !in 1..10) { println("Error: can't generate a secret number with a length of $codeLength because there aren't enough unique digits."); return }
-        var pseudoRandomNumber: String
-        while (true) {
-            secretCode = mutableListOf()
-            pseudoRandomNumber = System.nanoTime().toString().reversed().substring(2, 2 + codeLength + 1)
-            if (pseudoRandomNumber[0] == '0') continue
-            for (c in pseudoRandomNumber) {
-                if (pseudoRandomNumber.count { it == c } == 1) secretCode.add(c.digitToInt())
-                if (secretCode.size == codeLength) break
-            }
-            if (secretCode.size == codeLength) break else continue
+        println("Input the number of possible symbols in the code:")
+        cntSymbols = readln().toInt()
+        var cntLetters = 0
+        var symbol: String
+        if (cntSymbols > 10) { // 10 is count of digits
+            cntLetters = Random.nextInt(0, cntSymbols - 10 + 1)
         }
+
+        secretCode = mutableListOf()
+
+        while ((secretCode.size < cntLetters)) { // add letter
+            symbol = alphabet[Random.nextInt(0, cntLetters)].toString()
+            addSymbolToSecretCode(symbol)
+        }
+
+        while (secretCode.size < codeLength) { // add numbers
+            symbol = Random.nextInt(0, 10).toString()
+            addSymbolToSecretCode(symbol)
+        }
+        secretCode.shuffle()
+    }
+    fun gameCondition() {
+        val bounds = when {
+            cntSymbols > 11 -> "(0-9, a-${alphabet[cntSymbols - 10 - 1]})" // 10 is count of digits
+            cntSymbols == 11 -> "(0-9, a)"
+            else -> "(0-9)"
+        }
+        println("The secret is prepared: ${"*".repeat(secretCode.size)} $bounds.")
     }
 }
 
 fun main() {
     val cowsBulls = CowsBulls()
     cowsBulls.generateSecretCode()
+    cowsBulls.gameCondition()
     println("Okay, let's start a game!")
     cowsBulls.checkCode()
 }
